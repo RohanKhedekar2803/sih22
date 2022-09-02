@@ -1,0 +1,9 @@
+Hypothetical well based on USGS 2010 study on the Kabul Basin
+--------------------------------------
+Q = 4320 m3/day
+K = 100 m/day
+R = 0.0012 m/day
+r1 = 5 m
+r2 = 1071 m
+h1 = 28.744 m
+h2 = 30.00 m

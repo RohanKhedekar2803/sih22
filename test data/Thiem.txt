@@ -1,0 +1,8 @@
+Neogene aquifer of Kabul, Afghanistan (JICA 2011 report)
+-------------------------------------------------------
+Q = 272.83 m3/day
+T = 8 m2/day
+r1 = 0.10 m
+r2 = 1000 m
+h1 = 50 m
+h2 = 100 m

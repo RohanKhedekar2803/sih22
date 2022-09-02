@@ -1,0 +1,14 @@
+Oude Korendijk data from Kruseman & de Ridder (2000)
+Time-Drawdown Method
+------------------------------------------------------------
+Q = 2500 m3/day
+r = 60 m
+s and t in csv
+------------------------------------------------------------
+delta s = 0.40 m
+t0 = 0.000261 days
+t when u = 0.05 -> 0.0029 days or 4.22 min
+
+T = 1147.2 m2/day
+S = 1.87 x 10^-4
+Mean fitting error = 0.29 %
