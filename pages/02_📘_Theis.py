@@ -15,8 +15,8 @@ st.title(f"*Theis Method*")
 st.markdown("""---""")
 
 logout = st.sidebar.button('Log-Out')
-if logout:
-    st.session_state.signed_in = False
+
+st.session_state.signed_in = True
 
 if st.session_state.signed_in:
 
