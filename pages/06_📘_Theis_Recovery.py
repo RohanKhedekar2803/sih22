@@ -98,7 +98,8 @@ calculate_theis_recovery = st.button(label='Calculate', on_click=callback)
 st.markdown("""---""")
 
 if calculate_theis_recovery or st.session_state.theis_recovery_calculated_button_clicked:
-
+    cols = df.columns
+            
     t_list = np.array(df['t_dash'])+t_when_pumping_stopped
     df['t'] = t_list
     df['t_by_t_dash'] = df['t']/df['t_dash']

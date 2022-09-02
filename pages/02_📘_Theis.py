@@ -14,102 +14,96 @@ st.set_page_config(page_title="Theis", page_icon="🌊",
 st.title(f"*Theis Method*")
 st.markdown("""---""")
 
-logout = st.sidebar.button('Log-Out')
-
-st.session_state.signed_in = True
-
-if st.session_state.signed_in:
-
-    location = st.text_input(
+location = st.text_input(
         "Test Location", placeholder='Enter the location of the test well')
-    coordinates = st.text_input(
+coordinates = st.text_input(
         "Coordinates of test location", placeholder='48.8566° N, 2.3522° E')
-    soils = ['Alluvial Soil', 'Red & Yellow Soil', 'Black Cotton Soil', 'Laterite Soil',
+soils = ['Alluvial Soil', 'Red & Yellow Soil', 'Black Cotton Soil', 'Laterite Soil',
              'Mountainous or Forest Soil', 'Arid or Desert Soil', 'Saline and Alkaline Soil', 'Peaty and Marshy Soil']
-    soil_select = st.selectbox('Geology', soils, help='Select soil type')
-    rocks = ['Evaporitic', 'Carbonated', 'Detrital', ' Organic or plant organogenous',
+soil_select = st.selectbox('Geology', soils, help='Select soil type')
+rocks = ['Evaporitic', 'Carbonated', 'Detrital', ' Organic or plant organogenous',
              'Non consolidated', 'Plutonic', 'Volcanic', 'Metamorphic', 'Ortogneissic']
-    rock_select = st.selectbox('Lithology', rocks, help='Select rock type')
-    test_employee = st.text_input(
+rock_select = st.selectbox('Lithology', rocks, help='Select rock type')
+test_employee = st.text_input(
         "Performed by", placeholder='Performed by Mr / Mrs. ____')
 
-    column1, column2 = st.columns(2)
+column1, column2 = st.columns(2)
 
-    with column1:
+with column1:
         start_date = st.date_input('Start Date')
 
-    with column2:
+with column2:
         end_date = st.date_input('End Date')
 
-    if(end_date < start_date):
+if(end_date < start_date):
         st.error('Invalid date input - End date should be greater than start date')
         st.stop()
 
-    with column1:
+with column1:
         st.write('Start time')
         shr = int(st.number_input("hr", min_value=0, max_value=24))
         smin = int(st.number_input("min", min_value=0, max_value=60))
 
-    with column2:
+with column2:
         st.write('End time')
         ehr = int(st.number_input("hr ", min_value=0, max_value=24))
         emin = int(st.number_input("min ", min_value=0, max_value=60))
 
-    start_date_string = start_date.strftime("%Y/%m/%d")
-    start_date_year = int(start_date_string[0:4])
-    start_date_month = int(start_date_string[5:7])
-    start_date_day = int(start_date_string[8:])
+start_date_string = start_date.strftime("%Y/%m/%d")
+start_date_year = int(start_date_string[0:4])
+start_date_month = int(start_date_string[5:7])
+start_date_day = int(start_date_string[8:])
 
-    end_date_string = end_date.strftime("%Y/%m/%d")
-    end_date_year = int(end_date_string[0:4])
-    end_date_month = int(end_date_string[5:7])
-    end_date_day = int(end_date_string[8:])
+end_date_string = end_date.strftime("%Y/%m/%d")
+end_date_year = int(end_date_string[0:4])
+end_date_month = int(end_date_string[5:7])
+end_date_day = int(end_date_string[8:])
 
-    start_datetime = datetime(
+start_datetime = datetime(
         start_date_year, start_date_month, start_date_day, shr, smin, 0)
-    end_datetime = datetime(end_date_year, end_date_month,
+end_datetime = datetime(end_date_year, end_date_month,
                             end_date_day, ehr, emin, 0)
 
-    delta_time = ((end_datetime-start_datetime).total_seconds())/60
-    st.info(f"Total Duration of test is {delta_time} mins")
+delta_time = ((end_datetime-start_datetime).total_seconds())/60
+st.info(f"Total Duration of test is {delta_time} mins")
 
-    st.markdown("""---""")
+st.markdown("""---""")
 
-    zone = st.number_input('Zones Tapped in (bgl m)',
+zone = st.number_input('Zones Tapped in (bgl m)',
                            min_value=0.000, format="%.3f")
-    well_depth = st.number_input('Well Depth', min_value=0.000, format="%.3f")
-    well_diameter = st.number_input(
+well_depth = st.number_input('Well Depth', min_value=0.000, format="%.3f")
+well_diameter = st.number_input(
         'Well Diameter', min_value=0.000, format="%.3f")
-    static_water = st.number_input(
+static_water = st.number_input(
         'Static water level', min_value=0.000, format="%.3f")
-    st.markdown("""---""")
+st.markdown("""---""")
 
-    Q = st.number_input('Pumping rate from well (m3/day)',
+Q = st.number_input('Pumping rate from well (m3/day)',
                         min_value=0.000, format="%.3f")
-    r = st.number_input('Distance from well (m)',
+r = st.number_input('Distance from well (m)',
                         min_value=0.000, format="%.3f")
-    st.markdown("""---""")
+st.markdown("""---""")
 
-    input_method = st.radio('Choose a method for input of data',
+input_method = st.radio('Choose a method for input of data',
                             ('Upload File', 'Fill Form'), horizontal=True)
 
-    if 'theis_time' not in st.session_state:
-        st.session_state.theis_time = list()
-    if 'theis_drawdown' not in st.session_state:
-        st.session_state.theis_drawdown = list()
-    if 'exception_status' not in st.session_state:
-        st.session_state.exception_status = False
+if 'theis_time' not in st.session_state:
+    st.session_state.theis_time = list()
+if 'theis_drawdown' not in st.session_state:
+    st.session_state.theis_drawdown = list()
+if 'exception_status' not in st.session_state:
+    st.session_state.exception_status = False
 
-    def form_callback(t, s):
+def form_callback(t, s):
         st.session_state.theis_time.append(t)
         st.session_state.theis_drawdown.append(s)
 
-    def delete():
-        try:
-            del st.session_state.theis_time[del_index]
-            del st.session_state.theis_drawdown[del_index]
-        except:
-            st.session_state.exception_status = True
+def delete():
+    try:
+        del st.session_state.theis_time[del_index]
+        del st.session_state.theis_drawdown[del_index]
+    except:
+        st.session_state.exception_status = True
 
     if(input_method == 'Fill Form'):
 
@@ -353,14 +347,3 @@ if st.session_state.signed_in:
             st.success('File uploaded to Archive!')
 
         st.markdown("""---""")
-
-else:
-    st.error('Login or Sign-Up to access the app')
-
-hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
