@@ -130,219 +130,194 @@ def delete():
                                'Drawdown': st.session_state.theis_drawdown})
             st.table(df)
 
-    if(input_method == 'Upload File'):
+if(input_method == 'Upload File'):
 
-        uploaded_file = st.file_uploader("Choose a file")
-        st.warning(
+    uploaded_file = st.file_uploader("Choose a file")
+    st.warning(
             'Please keep the data in two columns as Time (days) and Drawdown (m) resepectively')
-        if(uploaded_file):
-            df = pd.read_csv(uploaded_file)
-            st.table(df)
+    if(uploaded_file):
+        df = pd.read_csv(uploaded_file)
+        st.table(df)
 
-    if "theis_calculated_button_clicked" not in st.session_state:
-        st.session_state.theis_calculated_button_clicked = False
+if "theis_calculated_button_clicked" not in st.session_state:
+    st.session_state.theis_calculated_button_clicked = False
 
-    def callback():
-        st.session_state.theis_calculated_button_clicked = True
+def callback():
+    st.session_state.theis_calculated_button_clicked = True
 
-    calculate_theis = st.button(label='Calculate', on_click=callback)
+calculate_theis = st.button(label='Calculate', on_click=callback)
+st.markdown("""---""")
+
+if calculate_theis or st.session_state.theis_calculated_button_clicked:
+
+    if(Q == 0 or r == 0):
+        st.error('Invalid user input - entered value is zero')
+        st.stop()
+
+    if 'df' not in locals():
+        st.error('Invalid user input - please enter data')
+        st.stop()
+
+    s = np.array(df['Drawdown'])
+    t = np.array(df['Time'])
+
+    t = np.divide(t, 1440)
+
+    def calculate_u(r, S, T, t):
+        return (r*r*S)/(4*T*t)
+
+    def calculate_theis_drawdown(t, S, T, Q, r):
+        u = calculate_u(r, S, T, t)
+        s_theis = Q/(4*np.pi*T)*exp1(u)
+        return s_theis
+
+    def theis_function(t, S, T):
+        return calculate_theis_drawdown(t, S, T, Q, r)
+
+    fig, ax = plt.subplots()
+    plt.plot(t, s, 'x')
+    plt.xlabel('Time')
+    plt.ylabel('Drawdown')
+    st.pyplot(fig)
+    fig, ax = plt.subplots()
+    lnt = np.log(t)
+    coeffs = np.polyfit(np.log(t), s, 1)
+    plt.plot(lnt, s, ls='', marker='o', label='Field Data')
+    fit_line = np.poly1d(coeffs)(lnt)
+    plt.plot(lnt, fit_line, label='Theis Fit')
+    plt.xlabel('Time')
+    plt.ylabel('Drawdown')
+    plt.legend(loc='best')
+    plt.savefig('fig.png')
+    st.pyplot(fig)
     st.markdown("""---""")
 
-    if calculate_theis or st.session_state.theis_calculated_button_clicked:
+    rms_residual = np.sqrt(np.sum((fit_line - s)**2))
+    m, c = coeffs
 
-        if(Q == 0 or r == 0):
-            st.error('Invalid user input - entered value is zero')
-            st.stop()
+    def get_S_and_T(m, c):
+        Tfit = Q / 4 / np.pi / m
+        Sfit = 4 * Tfit / r**2 * np.exp(-(c/m + np.euler_gamma))
+        return Sfit, Tfit
 
-        if 'df' not in locals():
-            st.error('Invalid user input - please enter data')
-            st.stop()
+    S, T = get_S_and_T(m, c)
 
-        s = np.array(df['Drawdown'])
-        t = np.array(df['Time'])
+    st.info('Transmissivity = {} m2/day'.format(round(T, 5)))
+    st.info('Storativity = {}'.format(round(S, 5)))
 
-        t = np.divide(t, 1440)
+    st.success(f'RMS residual = {round(rms_residual, 5)}')
+    st.markdown("""---""")
 
-        def calculate_u(r, S, T, t):
-            return (r*r*S)/(4*T*t)
-
-        def calculate_theis_drawdown(t, S, T, Q, r):
-            u = calculate_u(r, S, T, t)
-            s_theis = Q/(4*np.pi*T)*exp1(u)
-            return s_theis
-
-        def theis_function(t, S, T):
-            return calculate_theis_drawdown(t, S, T, Q, r)
-
-        fig, ax = plt.subplots()
-        plt.plot(t, s, 'x')
-        plt.xlabel('Time')
-        plt.ylabel('Drawdown')
-        st.pyplot(fig)
-        fig, ax = plt.subplots()
-        lnt = np.log(t)
-        coeffs = np.polyfit(np.log(t), s, 1)
-        plt.plot(lnt, s, ls='', marker='o', label='Field Data')
-        fit_line = np.poly1d(coeffs)(lnt)
-        plt.plot(lnt, fit_line, label='Theis Fit')
-        plt.xlabel('Time')
-        plt.ylabel('Drawdown')
-        plt.legend(loc='best')
-        plt.savefig('fig.png')
-        st.pyplot(fig)
-        st.markdown("""---""")
-
-        rms_residual = np.sqrt(np.sum((fit_line - s)**2))
-        m, c = coeffs
-
-        def get_S_and_T(m, c):
-            Tfit = Q / 4 / np.pi / m
-            Sfit = 4 * Tfit / r**2 * np.exp(-(c/m + np.euler_gamma))
-            return Sfit, Tfit
-
-        S, T = get_S_and_T(m, c)
-
-        st.info('Transmissivity = {} m2/day'.format(round(T, 5)))
-        st.info('Storativity = {}'.format(round(S, 5)))
-
-        st.success(f'RMS residual = {round(rms_residual, 5)}')
-        st.markdown("""---""")
-
-        def output_df_to_pdf(pdf, df):
-            table_cell_width = 35
-            table_cell_height = 10
-            pdf.set_font('Arial', 'B', 8)
-            cols = df.columns
-            for col in cols:
-                pdf.cell(table_cell_width, table_cell_height,
+    def output_df_to_pdf(pdf, df):
+        table_cell_width = 35
+        table_cell_height = 10
+        pdf.set_font('Arial', 'B', 8)
+        cols = df.columns
+        for col in cols:
+            pdf.cell(table_cell_width, table_cell_height,
                          col, align='C', border=1)
-            pdf.ln(table_cell_height)
-            pdf.set_font('Arial', '', 10)
-            for row in df.itertuples():
-                for col in cols:
-                    value = str(round(getattr(row, col), 5))
-                    pdf.cell(table_cell_width, table_cell_height,
+        pdf.ln(table_cell_height)
+        pdf.set_font('Arial', '', 10)
+        for row in df.itertuples():
+            for col in cols:
+                value = str(round(getattr(row, col), 5))
+                pdf.cell(table_cell_width, table_cell_height,
                              value, align='C', border=1)
-                pdf.ln(table_cell_height)
+            pdf.ln(table_cell_height)
                 
-        def output_df_to_pdf1(pdf, df):
-          table_cell_width = 90
-          table_cell_height = 12
-          pdf.set_font('Arial', '', 12)
-          cols = df.columns
-          for row in df.itertuples():
-              for col in cols:
-                  value = str(getattr(row, col))
-                  if (value[:9] == 'Performed'):
-                      table_cell_width = 180
-                      pdf.cell(table_cell_width, table_cell_height, value, align='L', border=1)
-                  elif (value == ''):
-                      pass
-                  else:
-                      table_cell_width = 90
-                      pdf.cell(table_cell_width, table_cell_height, value, align='L', border=1)
-              pdf.ln(table_cell_height)
-
-        pdf = FPDF()
-        pdf.add_page()
-
-        pdf.image('images/logo.jpg', w=25, h=30)
-
-        pdf.set_font('Arial', 'B', 10)
-        pdf.cell(0, 10, 'CENTRAL GROUND WATER BOARD (CGWB)', ln=1)
-        pdf.ln(5)
-
-        pdf.set_font('Arial', 'BU', 18)
-        pdf.cell(0, 10, 'Theis Test Report', align='C', ln=1)
-        pdf.ln(5)
-
+    def output_df_to_pdf1(pdf, df):
+        table_cell_width = 90
+        table_cell_height = 12
         pdf.set_font('Arial', '', 12)
-        lst1 = list()
-        lst2 = list()
-        lst1.append(f' location: {location} ')
-        lst2.append(f' coordinate: {coordinates} ')
-        lst1.append(f' Geology: {soil_select} ')
-        lst2.append(f' Lithology: {rock_select} ')
-        lst1.append(f'Performed by: {test_employee} ')
-        lst2.append('')
-        lst1.append(f'Start time: {shr}:{smin} ')
-        lst2.append(f'End time:  {ehr}:{emin}')
-        lst1.append(f' Start Date: {start_date} ')
-        lst2.append(f' End date:  {end_date} ')
+        cols = df.columns
+        for row in df.itertuples():
+            for col in cols:
+                value = str(getattr(row, col))
+                if (value[:9] == 'Performed'):
+                    table_cell_width = 180
+                    pdf.cell(table_cell_width, table_cell_height, value, align='L', border=1)
+                elif (value == ''):
+                    pass
+                else:
+                    table_cell_width = 90
+                    pdf.cell(table_cell_width, table_cell_height, value, align='L', border=1)
+            pdf.ln(table_cell_height)
 
-        df_1 = pd.DataFrame({'properties': lst1, 'values': lst2})
-        output_df_to_pdf1(pdf, df_1)
+    pdf = FPDF()
+    pdf.add_page()
 
-        pdf.ln(15)
+    pdf.image('images/logo.jpg', w=25, h=30)
 
-        lst3 = list()
-        lst4 = list()
-        lst3.append(f' Zones tapped in : {zone} (bgl m)')
-        lst4.append(f' Well depth : {well_depth} m')
-        lst3.append(f' Well diameter : {well_diameter} m')
-        lst4.append(f' Static water level : {static_water} m')
-        df_2 = pd.DataFrame({'properties': lst3, 'values': lst4})
-        output_df_to_pdf1(pdf, df_2)
-        pdf.ln(5)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(0, 10, 'CENTRAL GROUND WATER BOARD (CGWB)', ln=1)
+    pdf.ln(5)
 
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, f'Well Discharge (Q) : {Q} m3/day', ln=1)
-        pdf.cell(0, 10, f'Radial Distance (r) : {r} m', ln=1)
-        pdf.ln(5)
+    pdf.set_font('Arial', 'BU', 18)
+    pdf.cell(0, 10, 'Theis Test Report', align='C', ln=1)
+    pdf.ln(5)
 
-        pdf.set_font('Arial', 'B', 13)
-        pdf.cell(0, 10, "Graphical Interpretation", ln=1)
-        pdf.image('fig.png', w=200, h=200)
-        pdf.ln(5)
+    pdf.set_font('Arial', '', 12)
+    lst1 = list()
+    lst2 = list()
+    lst1.append(f' location: {location} ')
+    lst2.append(f' coordinate: {coordinates} ')
+    lst1.append(f' Geology: {soil_select} ')
+    lst2.append(f' Lithology: {rock_select} ')
+    lst1.append(f'Performed by: {test_employee} ')
+    lst2.append('')
+    lst1.append(f'Start time: {shr}:{smin} ')
+    lst2.append(f'End time:  {ehr}:{emin}')
+    lst1.append(f' Start Date: {start_date} ')
+    lst2.append(f' End date:  {end_date} ')
 
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 10, f'Transmissivity : {round(T, 5)} m2/day', ln=1)
-        pdf.cell(0, 10, f'Storativity : {round(S, 5)}', ln=1)
-        pdf.cell(
+    df_1 = pd.DataFrame({'properties': lst1, 'values': lst2})
+    output_df_to_pdf1(pdf, df_1)
+
+    pdf.ln(15)
+
+    lst3 = list()
+    lst4 = list()
+    lst3.append(f' Zones tapped in : {zone} (bgl m)')
+    lst4.append(f' Well depth : {well_depth} m')
+    lst3.append(f' Well diameter : {well_diameter} m')
+    lst4.append(f' Static water level : {static_water} m')
+    df_2 = pd.DataFrame({'properties': lst3, 'values': lst4})
+    output_df_to_pdf1(pdf, df_2)
+    pdf.ln(5)
+
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(0, 10, f'Well Discharge (Q) : {Q} m3/day', ln=1)
+    pdf.cell(0, 10, f'Radial Distance (r) : {r} m', ln=1)
+    pdf.ln(5)
+
+    pdf.set_font('Arial', 'B', 13)
+    pdf.cell(0, 10, "Graphical Interpretation", ln=1)
+    pdf.image('fig.png', w=200, h=200)
+    pdf.ln(5)
+
+    pdf.set_font('Arial', 'B', 12)
+    pdf.cell(0, 10, f'Transmissivity : {round(T, 5)} m2/day', ln=1)
+    pdf.cell(0, 10, f'Storativity : {round(S, 5)}', ln=1)
+    pdf.cell(
             0, 10, f'Mean Fitting Error = {round(rms_residual, 5)}%', ln=1)
-        pdf.ln(5)
+    pdf.ln(5)
 
-        pdf.set_font('Arial', 'B', 13)
-        pdf.cell(0, 10, 'Data Table', ln=1)
+    pdf.set_font('Arial', 'B', 13)
+    pdf.cell(0, 10, 'Data Table', ln=1)
 
-        pdf.set_font('Arial', '', 12)
-        output_df_to_pdf(pdf, df)
-        pdf.ln(4)
+    pdf.set_font('Arial', '', 12)
+    output_df_to_pdf(pdf, df)
+    pdf.ln(4)
 
-        pdf.dashed_line(10, int(pdf.get_y()), 210 - 10,
+    pdf.dashed_line(10, int(pdf.get_y()), 210 - 10,
                         int(pdf.get_y()), dash_length=1, space_length=1)
 
-        filename = "Theis_Test_Report_" + \
+    filename = "Theis_Test_Report_" + \
             datetime.now().strftime("%d-%m-%Y,%H:%M:%S")+".pdf"
-        st.download_button("Download Report", data=pdf.output(
+    st.download_button("Download Report", data=pdf.output(
             dest='S').encode('latin-1'), file_name=filename)
 
-        firebaseConfig = {
-            'apiKey': "AIzaSyC42lNhRM9iJ2yvvbVEmttCMSA_tDlGgVY",
-            'authDomain': "aquaprobedb.firebaseapp.com",
-            'projectId': "aquaprobedb",
-            'databaseURL': "https://aquaprobedb-default-rtdb.firebaseio.com/",
-            'storageBucket': "aquaprobedb.appspot.com",
-            'messagingSenderId': "176700935107",
-            'appId': "1:176700935107:web:4f8550ef564458d4718b76"
-        }
+        
 
-        firebase = pyrebase.initialize_app(firebaseConfig)
-        auth = firebase.auth()
+    st.markdown("""---""")
 
-        db = firebase.database()
-        storage = firebase.storage()
-
-        user = st.session_state.user
-        handle = db.child(user['localId']).child("Handle").get().val()
-        upload_path_on_cloud = f"{handle}/{location}/{filename}"
-
-        def upload_file_to_storage(file):
-            storage.child(upload_path_on_cloud).put(file)
-
-        upload_file = st.button('Upload to Archives')
-        if upload_file:
-            upload_file_to_storage(pdf.output(dest='S').encode('latin-1'))
-            st.success('File uploaded to Archive!')
-
-        st.markdown("""---""")
