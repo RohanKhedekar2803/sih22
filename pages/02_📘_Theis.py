@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from scipy.special import exp1
 from fpdf import FPDF
 from datetime import date, datetime
-import pyrebase
 import images
 
 st.set_page_config(page_title="Theis", page_icon="🌊",
