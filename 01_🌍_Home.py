@@ -4,7 +4,7 @@ import images
 st.set_page_config(page_title="AquaProbe application using cloud", page_icon="🌊",
                    layout="wide", initial_sidebar_state="auto", menu_items=None)
 
-st.title(f"*AquaProbe application using cloud*")
+st.title(f"*AquaProbe*")
 st.markdown("""---""")
 
 with st.expander("Index", expanded=True):
