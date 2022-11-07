@@ -1,7 +1,7 @@
 import streamlit as st
 import images
 
-st.set_page_config(page_title="AquaProbe", page_icon="🌊",
+st.set_page_config(page_title="AquaProbe application using cloud", page_icon="🌊",
                    layout="wide", initial_sidebar_state="auto", menu_items=None)
 
 st.title(f"*AquaProbe*")
