@@ -2,7 +2,7 @@
 
 CGWB suggests developing a  application for analysis and interpretation of pumping test data which can be distributed as freeware for use by ground water professionals, researchers, students, teachers and others.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://sahil-gidwani-sih-01--home-38q9j9.streamlitapp.com/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rohankhedekar2803-sih22-01--home-thmz0v.streamlit.app/)
 
 ## Built With
 
